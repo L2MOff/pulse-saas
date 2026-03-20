@@ -15,7 +15,10 @@
  *   FRONTEND_URL           ← https://votre-domaine.fr
  */
 
-require('dotenv').config();
+// En local uniquement — Vercel injecte les variables directement en production
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const express    = require('express');
 const cors       = require('cors');
