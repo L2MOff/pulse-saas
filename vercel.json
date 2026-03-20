@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/",         "destination": "/landing/index.html" },
+    { "source": "/auth",     "destination": "/auth/auth.html" },
+    { "source": "/app",      "destination": "/app/app.html" },
+    { "source": "/api/(.*)", "destination": "/api/stripe-routes.js" }
+  ]
+}

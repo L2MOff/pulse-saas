@@ -1,0 +1,24 @@
+{
+  "name": "pulse-saas-api",
+  "version": "1.0.0",
+  "description": "PULSE — Backend API (Stripe + Supabase)",
+  "main": "api/stripe-routes.js",
+  "scripts": {
+    "start": "node api/stripe-routes.js",
+    "dev": "nodemon api/stripe-routes.js",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe-webhook"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "stripe": "^14.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#06060a;--surface:#0e0e14;--surface2:#16161e;
+  --border:#1e1e2a;--accent:#e8ff47;--accent2:#ff6b35;
+  --text:#f0f0f5;--muted:#7070a0;--error:#ff4747;--success:#47ffb8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* SPLIT LAYOUT */
+.auth-left{
+  width:45%;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:48px;
+  position:relative;overflow:hidden;
+}
+.auth-right{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px;
+}
+
+/* LEFT DECORATIVE */
+.left-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(232,255,71,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,0.02) 1px,transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+}
+.left-glow{
+  position:absolute;bottom:-100px;left:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(232,255,71,0.06),transparent 70%);
+  pointer-events:none;
+}
+.left-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;
+  color:var(--accent);text-decoration:none;position:relative;z-index:1;
+  margin-bottom:auto;
+}
+.left-content{position:relative;z-index:1;}
+.left-quote{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,4vw,52px);
+  letter-spacing:1px;line-height:1;margin-bottom:24px;
+}
+.left-quote em{color:var(--accent);font-style:normal;}
+.left-sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:40px;}
+.left-features{display:flex;flex-direction:column;gap:14px;}
+.left-feature{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted);}
+.left-feature span:first-child{color:var(--success);}
+
+/* TESTIMONIAL MINI */
+.left-testi{
+  margin-top:40px;background:rgba(232,255,71,0.04);border:1px solid rgba(232,255,71,0.1);
+  border-radius:12px;padding:18px;
+}
+.testi-q{font-size:13px;line-height:1.6;margin-bottom:12px;color:var(--text);}
+.testi-author{display:flex;align-items:center;gap:8px;}
+.t-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#06060a;}
+.t-name{font-size:12px;font-weight:600;}
+.t-role{font-size:11px;color:var(--muted);}
+
+/* FORM */
+.auth-form-wrap{width:100%;max-width:420px;}
+.auth-header{margin-bottom:36px;text-align:center;}
+.auth-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-bottom:6px;}
+.auth-sub{font-size:14px;color:var(--muted);}
+
+/* TABS */
+.auth-tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:28px;}
+.auth-tab{flex:1;padding:9px;border-radius:7px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.2s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.auth-tab.active{background:var(--surface2);color:var(--text);}
+
+/* GOOGLE BTN */
+.btn-google{
+  width:100%;padding:12px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;gap:12px;
+  font-size:14px;font-weight:600;cursor:pointer;color:var(--text);
+  transition:all 0.2s;margin-bottom:20px;font-family:'DM Sans',sans-serif;
+}
+.btn-google:hover{border-color:var(--muted);background:var(--surface2);}
+.google-icon{width:20px;height:20px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
+
+.divider-line{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.divider-line::before,.divider-line::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider-line span{font-size:12px;color:var(--muted);white-space:nowrap;}
+
+/* FORM ELEMENTS */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;font-weight:600;letter-spacing:0.5px;color:var(--muted);display:block;margin-bottom:6px;}
+.form-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);
+  font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;
+}
+.form-input:focus{border-color:var(--accent);}
+.form-input.error{border-color:var(--error);}
+.form-input::placeholder{color:var(--muted);opacity:0.5;}
+
+.password-wrap{position:relative;}
+.password-toggle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;
+}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* SUBMIT BTN */
+.btn-submit{
+  width:100%;padding:13px;background:var(--accent);color:#06060a;
+  border:none;border-radius:10px;font-size:15px;font-weight:800;
+  cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-submit:hover{background:#d4eb3a;transform:translateY(-1px);}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* SPINNER */
+.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.3);border-top-color:#06060a;border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ALERTS */
+.alert{
+  padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;
+  display:none;align-items:center;gap:8px;
+}
+.alert.show{display:flex;}
+.alert-error{background:rgba(255,71,71,0.1);border:1px solid rgba(255,71,71,0.3);color:#ff8888;}
+.alert-success{background:rgba(71,255,184,0.1);border:1px solid rgba(71,255,184,0.3);color:var(--success);}
+
+/* PASSWORD STRENGTH */
+.pw-strength{margin-top:6px;display:none;}
+.pw-strength.show{display:block;}
+.pw-bar{height:3px;border-radius:3px;background:var(--border);margin-bottom:4px;}
+.pw-fill{height:100%;border-radius:3px;transition:all 0.3s;}
+.pw-label{font-size:11px;color:var(--muted);}
+
+/* PLAN SELECTOR */
+.plan-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.plan-chip{
+  padding:10px 8px;border:1px solid var(--border);border-radius:8px;
+  text-align:center;cursor:pointer;transition:all 0.15s;
+  font-family:'DM Sans',sans-serif;background:var(--surface);
+}
+.plan-chip:hover{border-color:var(--muted);}
+.plan-chip.selected{border-color:var(--accent);background:rgba(232,255,71,0.05);}
+.plan-chip .p-name{font-size:13px;font-weight:700;color:var(--text);}
+.plan-chip .p-price{font-size:11px;color:var(--muted);margin-top:2px;}
+.plan-chip .p-badge{font-size:9px;background:var(--accent);color:#06060a;padding:1px 5px;border-radius:3px;font-weight:700;display:inline-block;margin-top:3px;}
+
+/* TERMS */
+.terms{font-size:12px;color:var(--muted);text-align:center;margin-top:20px;line-height:1.5;}
+.terms a{color:var(--accent);text-decoration:none;}
+
+/* BACK LINK */
+.back-link{display:flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:32px;transition:color 0.15s;}
+.back-link:hover{color:var(--text);}
+
+/* RESPONSIVE */
+@media(max-width:800px){
+  .auth-left{display:none;}
+  .auth-right{padding:32px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="auth-left">
+  <div class="left-grid"></div>
+  <div class="left-glow"></div>
+  <a href="index.html" class="left-logo">PULSE</a>
+  <div class="left-content">
+    <h1 class="left-quote">MARKETING<br><em>AUTOMATISÉ</em><br>DÈS AUJOURD'HUI</h1>
+    <p class="left-sub">Rejoignez 1 200+ entrepreneurs qui économisent des heures chaque semaine grâce à l'IA.</p>
+    <div class="left-features">
+      <div class="left-feature"><span>✓</span><span>14 jours gratuits, sans carte de crédit</span></div>
+      <div class="left-feature"><span>✓</span><span>Contenu généré en moins de 5 secondes</span></div>
+      <div class="left-feature"><span>✓</span><span>Annulable à tout moment</span></div>
+      <div class="left-feature"><span>✓</span><span>Support francophone 7j/7</span></div>
+    </div>
+    <div class="left-testi">
+      <p class="testi-q">"PULSE m'a fait économiser 15h par mois. Le ROI est immédiat dès la première semaine."</p>
+      <div class="testi-author">
+        <div class="t-avatar">JD</div>
+        <div><div class="t-name">Julie Durand</div><div class="t-role">E-commerçante · Lyon</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL: FORM -->
+<div class="auth-right">
+  <div class="auth-form-wrap">
+    <a href="index.html" class="back-link">← Retour à l'accueil</a>
+
+    <div class="auth-header">
+      <h2 class="auth-title" id="formTitle">CRÉER UN COMPTE</h2>
+      <p class="auth-sub" id="formSub">14 jours gratuits · Aucune carte requise</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab" onclick="showLogin()" id="loginTab">Se connecter</button>
+      <button class="auth-tab active" onclick="showRegister()" id="registerTab">S'inscrire</button>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="alert alert-error" id="alertError">
+      <span>⚠</span><span id="alertErrorMsg">Erreur</span>
+    </div>
+    <div class="alert alert-success" id="alertSuccess">
+      <span>✓</span><span id="alertSuccessMsg">Succès</span>
+    </div>
+
+    <!-- GOOGLE -->
+    <button class="btn-google" onclick="loginWithGoogle()">
+      <div class="google-icon">G</div>
+      Continuer avec Google
+    </button>
+
+    <div class="divider-line"><span>ou par email</span></div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prénom</label>
+          <input class="form-input" type="text" id="regFirstName" placeholder="Jules">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" id="regLastName" placeholder="Martin">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email professionnel</label>
+        <input class="form-input" type="email" id="regEmail" placeholder="jules@monentreprise.fr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="regPassword" placeholder="Min. 8 caractères" oninput="checkStrength(this.value)">
+          <button class="password-toggle" onclick="togglePw('regPassword',this)" type="button">👁</button>
+        </div>
+        <div class="pw-strength" id="pwStrength">
+          <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+          <div class="pw-label" id="pwLabel"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Choisissez votre plan</label>
+        <div class="plan-chips">
+          <div class="plan-chip" onclick="selectPlan(this,'starter')" data-plan="starter">
+            <div class="p-name">Starter</div>
+            <div class="p-price">29€/mois</div>
+          </div>
+          <div class="plan-chip selected" onclick="selectPlan(this,'pro')" data-plan="pro">
+            <div class="p-name">Pro</div>
+            <div class="p-price">79€/mois</div>
+            <div class="p-badge">⭐ POPULAIRE</div>
+          </div>
+          <div class="plan-chip" onclick="selectPlan(this,'business')" data-plan="business">
+            <div class="p-name">Business</div>
+            <div class="p-price">199€/mois</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="regBtn" onclick="register()">
+        Commencer gratuitement →
+      </button>
+      <p class="terms">En vous inscrivant, vous acceptez nos <a href="#">CGU</a> et notre <a href="#">politique RGPD</a>.</p>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="votre@email.fr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="loginPassword" placeholder="••••••••">
+          <button class="password-toggle" onclick="togglePw('loginPassword',this)" type="button">👁</button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:16px;">
+        <a href="#" onclick="forgotPassword()" style="font-size:13px;color:var(--accent);text-decoration:none;">Mot de passe oublié ?</a>
+      </div>
+      <button class="btn-submit" id="loginBtn" onclick="login()">
+        Se connecter →
+      </button>
+    </div>
+
+    <!-- FORGOT PASSWORD FORM -->
+    <div id="forgotForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Email de votre compte</label>
+        <input class="form-input" type="email" id="forgotEmail" placeholder="votre@email.fr">
+      </div>
+      <button class="btn-submit" onclick="sendReset()">Envoyer le lien de réinitialisation</button>
+      <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted)"><a href="#" onclick="showLogin()" style="color:var(--accent);text-decoration:none;">← Retour à la connexion</a></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──
+// 🔧 REMPLACEZ PAR VOS VRAIES CLÉS SUPABASE
+const SUPABASE_URL = 'https://efzffdkgljshqajtlinv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmemZmZGtnbGpzaHFhanRsaW52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDY1OTIsImV4cCI6MjA4OTU4MjU5Mn0.ljQeMLDtdhBdLiC3pW3MRSFOeie3Kks4kiSj3IfXl1o';
+
+let supabase = null;
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) {
+  console.warn('Supabase non configuré — mode démo');
+}
+
+// ── PLAN SELECTION ──
+let selectedPlan = 'pro';
+const urlPlan = new URLSearchParams(location.search).get('plan');
+if (urlPlan) {
+  selectedPlan = urlPlan;
+  document.querySelectorAll('.plan-chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.plan === selectedPlan);
+  });
+}
+
+function selectPlan(el, plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── PASSWORD STRENGTH ──
+function checkStrength(pw) {
+  const el = document.getElementById('pwStrength');
+  const fill = document.getElementById('pwFill');
+  const label = document.getElementById('pwLabel');
+  el.classList.add('show');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const colors = ['#ff4747','#ff9547','#e8ff47','#47ffb8'];
+  const labels = ['Trop faible','Faible','Bon','Excellent'];
+  const widths = ['25%','50%','75%','100%'];
+  fill.style.width = widths[score-1] || '10%';
+  fill.style.background = colors[score-1] || '#ff4747';
+  label.textContent = labels[score-1] || '';
+  label.style.color = colors[score-1] || '#ff4747';
+}
+
+// ── TOGGLE PASSWORD VISIBILITY ──
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+// ── SHOW/HIDE FORMS ──
+function showLogin() {
+  document.getElementById('loginTab').classList.add('active');
+  document.getElementById('registerTab').classList.remove('active');
+  document.getElementById('loginForm').style.display = '';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = 'none';
+  document.getElementById('formTitle').textContent = 'CONNEXION';
+  document.getElementById('formSub').textContent = 'Content de vous revoir 👋';
+  hideAlerts();
+}
+
+function showRegister() {
+  document.getElementById('registerTab').classList.add('active');
+  document.getElementById('loginTab').classList.remove('active');
+  document.getElementById('registerForm').style.display = '';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = 'none';
+  document.getElementById('formTitle').textContent = 'CRÉER UN COMPTE';
+  document.getElementById('formSub').textContent = '14 jours gratuits · Aucune carte requise';
+  hideAlerts();
+}
+
+function forgotPassword() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = '';
+  document.getElementById('formTitle').textContent = 'MOT DE PASSE OUBLIÉ';
+  document.getElementById('formSub').textContent = 'Nous vous enverrons un lien de réinitialisation';
+  hideAlerts();
+}
+
+// ── ALERTS ──
+function showError(msg) {
+  const el = document.getElementById('alertError');
+  document.getElementById('alertErrorMsg').textContent = msg;
+  el.classList.add('show');
+  document.getElementById('alertSuccess').classList.remove('show');
+}
+function showSuccess(msg) {
+  const el = document.getElementById('alertSuccess');
+  document.getElementById('alertSuccessMsg').textContent = msg;
+  el.classList.add('show');
+  document.getElementById('alertError').classList.remove('show');
+}
+function hideAlerts() {
+  document.getElementById('alertError').classList.remove('show');
+  document.getElementById('alertSuccess').classList.remove('show');
+}
+
+// ── LOADING STATE ──
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Chargement…';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btnId === 'regBtn' ? 'Commencer gratuitement →' : 'Se connecter →';
+  }
+}
+
+// ── REGISTER ──
+async function register() {
+  const firstName = document.getElementById('regFirstName').value.trim();
+  const lastName = document.getElementById('regLastName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+
+  if (!firstName || !email || !password) { showError('Veuillez remplir tous les champs obligatoires.'); return; }
+  if (password.length < 8) { showError('Le mot de passe doit contenir au moins 8 caractères.'); return; }
+  if (!email.includes('@')) { showError('Adresse email invalide.'); return; }
+
+  setLoading('regBtn', true);
+
+  // MODE DÉMO (sans Supabase configuré)
+  if (!supabase || SUPABASE_URL === 'https://votre-projet.supabase.co') {
+    await new Promise(r => setTimeout(r, 1500)); // simulate API
+    showSuccess('Compte créé ! Redirection vers l\'application…');
+    setTimeout(() => { window.location.href = 'app.html'; }, 1500);
+    setLoading('regBtn', false);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          plan: selectedPlan,
+          trial_end: new Date(Date.now() + 14*24*60*60*1000).toISOString()
+        }
+      }
+    });
+
+    if (error) throw error;
+
+    // Créer profil dans la DB
+    if (data.user) {
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        plan: selectedPlan,
+        credits: 300,
+        credits_used: 0,
+        trial_end: new Date(Date.now() + 14*24*60*60*1000).toISOString()
+      });
+    }
+
+    if (data.user && !data.session) {
+      showSuccess('Un email de confirmation a été envoyé. Vérifiez votre boîte mail !');
+    } else {
+      window.location.href = 'app.html';
+    }
+  } catch(e) {
+    showError(e.message || 'Erreur lors de l\'inscription. Réessayez.');
+  }
+  setLoading('regBtn', false);
+}
+
+// ── LOGIN ──
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password) { showError('Email et mot de passe requis.'); return; }
+
+  setLoading('loginBtn', true);
+
+  // MODE DÉMO
+  if (!supabase || SUPABASE_URL === 'https://votre-projet.supabase.co') {
+    await new Promise(r => setTimeout(r, 1200));
+    showSuccess('Connexion réussie ! Redirection…');
+    setTimeout(() => { window.location.href = 'app.html'; }, 1000);
+    setLoading('loginBtn', false);
+    return;
+  }
+
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    window.location.href = 'app.html';
+  } catch(e) {
+    showError('Email ou mot de passe incorrect.');
+  }
+  setLoading('loginBtn', false);
+}
+
+// ── GOOGLE LOGIN ──
+async function loginWithGoogle() {
+  if (!supabase || SUPABASE_URL === 'https://votre-projet.supabase.co') {
+    showError('Configurez Supabase pour activer Google OAuth.');
+    return;
+  }
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/app.html' }
+  });
+}
+
+// ── FORGOT PASSWORD ──
+async function sendReset() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { showError('Entrez votre adresse email.'); return; }
+
+  if (!supabase || SUPABASE_URL === 'https://votre-projet.supabase.co') {
+    showSuccess('(Démo) Lien de réinitialisation envoyé !');
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/auth.html?mode=reset'
+  });
+  if (error) showError(error.message);
+  else showSuccess('Lien envoyé ! Vérifiez votre boîte mail.');
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('loginForm').style.display !== 'none') login();
+    else if (document.getElementById('registerForm').style.display !== 'none') register();
+  }
+});
+</script>
+</body>
+</html>

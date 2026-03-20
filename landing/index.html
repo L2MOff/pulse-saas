@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — L'IA Marketing qui travaille pendant que vous dormez</title>
+<meta name="description" content="Générez des posts, emails, pubs et articles SEO en quelques secondes. PULSE automatise votre marketing avec l'IA.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06060a;
+  --surface: #0e0e14;
+  --border: #1e1e2a;
+  --accent: #e8ff47;
+  --accent2: #ff6b35;
+  --accent3: #47ffb8;
+  --text: #f0f0f5;
+  --muted: #7070a0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+/* NOISE TEXTURE */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.3;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 5%;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid transparent;
+  transition:all 0.3s;
+}
+nav.scrolled{background:rgba(6,6,10,0.95);border-color:var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--accent);text-decoration:none;}
+.nav-links{display:flex;gap:36px;align-items:center;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{
+  padding:9px 22px;background:var(--accent);color:#06060a;
+  border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;
+  transition:all 0.2s;
+}
+.nav-cta:hover{background:#d4eb3a;transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:120px 5% 80px;position:relative;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,255,71,0.08);border:1px solid rgba(232,255,71,0.2);
+  color:var(--accent);padding:7px 16px;border-radius:40px;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:32px;
+  animation:fadeDown 0.6s ease both;
+}
+.hero-eyebrow span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(60px,10vw,140px);
+  line-height:0.9;letter-spacing:-1px;
+  margin-bottom:28px;
+  animation:fadeUp 0.7s 0.1s ease both;
+}
+.hero-title .line2{color:var(--accent);}
+.hero-title .line3{
+  -webkit-text-stroke:1px rgba(240,240,245,0.2);
+  color:transparent;
+}
+
+.hero-sub{
+  font-size:clamp(16px,2vw,20px);color:var(--muted);max-width:560px;
+  line-height:1.6;margin-bottom:44px;font-weight:300;
+  animation:fadeUp 0.7s 0.2s ease both;
+}
+
+.hero-actions{
+  display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp 0.7s 0.3s ease both;
+}
+.btn-hero{
+  padding:16px 36px;background:var(--accent);color:#06060a;
+  border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;
+  transition:all 0.2s;letter-spacing:0.5px;
+}
+.btn-hero:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(232,255,71,0.25);}
+.btn-ghost-hero{
+  padding:16px 28px;border:1px solid var(--border);color:var(--muted);
+  border-radius:10px;font-size:15px;text-decoration:none;
+  transition:all 0.2s;
+}
+.btn-ghost-hero:hover{border-color:var(--text);color:var(--text);}
+
+.hero-proof{
+  margin-top:60px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp 0.7s 0.4s ease both;
+}
+.proof-avatars{display:flex;}
+.proof-avatar{
+  width:36px;height:36px;border-radius:50%;border:2px solid var(--bg);
+  margin-left:-10px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:var(--bg);font-weight:700;
+}
+.proof-text{font-size:13px;color:var(--muted);}
+.proof-text strong{color:var(--text);}
+.proof-stars{color:var(--accent);letter-spacing:-2px;}
+
+/* GRID GLOW */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(232,255,71,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,255,71,0.03) 1px,transparent 1px);
+  background-size:80px 80px;
+  pointer-events:none;
+  mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,black,transparent);
+}
+.hero-glow{
+  position:absolute;top:10%;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse,rgba(232,255,71,0.07),transparent 70%);
+  pointer-events:none;
+}
+
+/* MARQUEE */
+.marquee-section{
+  padding:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  overflow:hidden;background:var(--surface);
+}
+.marquee-track{display:flex;gap:60px;white-space:nowrap;animation:marquee 20s linear infinite;}
+.marquee-item{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--muted);
+}
+.marquee-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0;}
+@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ── DEMO PREVIEW ── */
+.demo-section{padding:100px 5%;text-align:center;}
+.section-tag{
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:16px;
+}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,64px);letter-spacing:1px;margin-bottom:20px;}
+.section-sub{font-size:16px;color:var(--muted);max-width:500px;margin:0 auto 60px;line-height:1.6;}
+
+.demo-window{
+  max-width:900px;margin:0 auto;
+  background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,0.6);
+}
+.demo-bar{
+  background:#0e0e14;border-bottom:1px solid var(--border);
+  padding:14px 20px;display:flex;align-items:center;gap:8px;
+}
+.demo-dot{width:12px;height:12px;border-radius:50%;}
+.demo-dot.r{background:#ff5f57;}.demo-dot.y{background:#febc2e;}.demo-dot.g{background:#28c840;}
+.demo-url{
+  flex:1;background:#16161e;border-radius:6px;padding:5px 14px;
+  font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);
+  margin:0 12px;text-align:left;
+}
+.demo-body{padding:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:left;}
+.demo-left{display:flex;flex-direction:column;gap:12px;}
+.demo-field{background:#16161e;border:1px solid var(--border);border-radius:8px;padding:12px;}
+.demo-field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.demo-field-val{font-size:13px;color:var(--text);}
+.demo-gen-btn{
+  background:var(--accent);color:#06060a;border:none;
+  border-radius:8px;padding:12px;font-weight:800;font-size:14px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+}
+.demo-right{background:#16161e;border:1px solid var(--border);border-radius:8px;padding:16px;}
+.demo-output-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.demo-typing{font-size:13px;line-height:1.7;color:var(--text);}
+.cursor{display:inline-block;width:2px;height:14px;background:var(--accent);animation:blink 1s infinite;vertical-align:middle;margin-left:2px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ── FEATURES ── */
+.features-section{padding:100px 5%;}
+.features-header{text-align:center;margin-bottom:70px;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:20px;overflow:hidden;max-width:1100px;margin:0 auto;}
+.feature-card{
+  background:var(--surface);padding:36px 30px;
+  transition:background 0.2s;
+}
+.feature-card:hover{background:#131320;}
+.feature-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px;
+}
+.fi-1{background:rgba(232,255,71,0.1);}
+.fi-2{background:rgba(255,107,53,0.1);}
+.fi-3{background:rgba(71,255,184,0.1);}
+.fi-4{background:rgba(168,85,247,0.1);}
+.fi-5{background:rgba(59,130,246,0.1);}
+.fi-6{background:rgba(232,255,71,0.08);}
+.feature-title{font-weight:700;font-size:17px;margin-bottom:10px;}
+.feature-desc{font-size:14px;color:var(--muted);line-height:1.6;}
+
+/* ── HOW IT WORKS ── */
+.how-section{padding:100px 5%;text-align:center;}
+.steps{display:flex;gap:0;align-items:flex-start;justify-content:center;max-width:900px;margin:60px auto 0;position:relative;}
+.steps::before{
+  content:'';position:absolute;top:28px;left:15%;right:15%;
+  height:1px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent);
+}
+.step{flex:1;padding:0 20px;text-align:center;}
+.step-num{
+  width:56px;height:56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:24px;
+  margin:0 auto 20px;position:relative;z-index:1;
+  border:2px solid var(--border);background:var(--bg);
+  color:var(--muted);
+}
+.step:nth-child(2) .step-num{border-color:var(--accent);color:var(--accent);background:rgba(232,255,71,0.05);}
+.step-title{font-weight:700;font-size:16px;margin-bottom:8px;}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.5;}
+
+/* ── SOCIAL PROOF ── */
+.proof-section{padding:80px 5%;text-align:center;}
+.testimonials{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1000px;margin:50px auto 0;}
+.testimonial{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:28px;text-align:left;
+}
+.testi-stars{color:var(--accent);font-size:14px;letter-spacing:2px;margin-bottom:14px;}
+.testi-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:18px;}
+.testi-user{display:flex;align-items:center;gap:10px;}
+.testi-avatar{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--bg);
+}
+.testi-name{font-weight:600;font-size:14px;}
+.testi-role{font-size:12px;color:var(--muted);}
+
+/* ── PRICING ── */
+.pricing-section{padding:100px 5%;text-align:center;}
+.pricing-toggle{
+  display:inline-flex;background:var(--surface);border:1px solid var(--border);
+  border-radius:40px;padding:4px;margin-bottom:50px;gap:4px;
+}
+.toggle-btn{
+  padding:8px 20px;border-radius:36px;font-size:13px;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);
+  transition:all 0.2s;font-family:'DM Sans',sans-serif;
+}
+.toggle-btn.active{background:var(--accent);color:#06060a;}
+.save-badge{
+  display:inline-block;background:rgba(71,255,184,0.1);border:1px solid var(--accent3);
+  color:var(--accent3);font-size:11px;font-weight:700;padding:2px 8px;
+  border-radius:20px;margin-left:6px;
+}
+
+.pricing-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1000px;margin:0 auto;}
+.pricing-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:32px 28px;text-align:left;
+  position:relative;overflow:hidden;
+}
+.pricing-card.featured{
+  border-color:var(--accent);
+  background:linear-gradient(160deg,rgba(232,255,71,0.04),var(--surface));
+}
+.pricing-card.featured::after{
+  content:'⭐ PLUS POPULAIRE';
+  position:absolute;top:18px;right:-28px;
+  background:var(--accent);color:#06060a;
+  font-size:9px;font-weight:900;letter-spacing:1.5px;padding:5px 44px;
+  transform:rotate(35deg);
+}
+.pc-name{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:16px;}
+.pc-price{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:-1px;line-height:1;color:var(--text);}
+.pc-period{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.pc-desc{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;border-top:1px solid var(--border);padding-top:20px;}
+.pc-features{list-style:none;margin-bottom:28px;}
+.pc-features li{font-size:13px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);display:flex;align-items:flex-start;gap:8px;}
+.pc-features li:last-child{border-bottom:none;}
+.pc-features li::before{content:'✓';color:var(--accent3);font-weight:700;margin-top:1px;flex-shrink:0;}
+.pc-features li.no{color:#444;}
+.pc-features li.no::before{content:'—';color:#333;}
+.pc-btn{
+  width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;
+  cursor:pointer;border:none;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  text-decoration:none;display:block;text-align:center;
+}
+.pc-btn-default{background:var(--surface);border:1px solid var(--border);color:var(--muted);}
+.pc-btn-default:hover{border-color:var(--text);color:var(--text);}
+.pc-btn-featured{background:var(--accent);color:#06060a;}
+.pc-btn-featured:hover{background:#d4eb3a;transform:translateY(-1px);}
+
+/* ── FAQ ── */
+.faq-section{padding:80px 5%;max-width:700px;margin:0 auto;}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0;}
+.faq-q{
+  font-weight:600;font-size:15px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--text);
+}
+.faq-q:hover{color:var(--accent);}
+.faq-icon{font-size:20px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.7;padding-top:12px;display:none;}
+.faq-item.open .faq-a{display:block;}
+.faq-item.open .faq-icon{transform:rotate(45deg);color:var(--accent);}
+
+/* ── CTA FINAL ── */
+.cta-section{
+  padding:120px 5%;text-align:center;
+  background:linear-gradient(180deg,var(--bg),var(--surface));
+  border-top:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.cta-glow{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(232,255,71,0.06),transparent 70%);
+  pointer-events:none;
+}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,100px);letter-spacing:1px;line-height:0.9;margin-bottom:28px;}
+.cta-title em{color:var(--accent);font-style:normal;}
+.cta-sub{font-size:18px;color:var(--muted);margin-bottom:44px;max-width:480px;margin-left:auto;margin-right:auto;}
+.cta-guarantee{font-size:13px;color:var(--muted);margin-top:20px;}
+.cta-guarantee span{color:var(--accent3);}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:60px 5% 40px;
+}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:50px;}
+.footer-brand .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent);margin-bottom:12px;}
+.footer-brand p{font-size:13px;color:var(--muted);line-height:1.6;max-width:240px;}
+.footer-col h4{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:16px;}
+.footer-col a{display:block;font-size:13px;color:var(--muted);text-decoration:none;padding:4px 0;transition:color 0.15s;}
+.footer-col a:hover{color:var(--text);}
+.footer-bottom{border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;}
+.footer-bottom p{font-size:12px;color:var(--muted);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.reveal{opacity:0;transform:translateY(30px);transition:all 0.6s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .nav-links{display:none;}
+  .features-grid{grid-template-columns:1fr 1fr;}
+  .pricing-cards,.testimonials{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .steps{flex-direction:column;align-items:center;}
+  .steps::before{display:none;}
+  .demo-body{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .features-grid,.footer-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">PULSE</a>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#how">Comment ça marche</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a href="app.html" class="nav-cta">Commencer gratuitement →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow"><span></span> Propulsé par Claude AI · Nouveau</div>
+  <h1 class="hero-title">
+    VOTRE<br>
+    <span class="line2">MARKETING</span><br>
+    <span class="line3">AUTOMATISÉ</span>
+  </h1>
+  <p class="hero-sub">Posts, emails, publicités et articles SEO générés en quelques secondes par l'IA. Concentrez-vous sur votre business, PULSE s'occupe du reste.</p>
+  <div class="hero-actions">
+    <a href="auth.html" class="btn-hero">Essayer gratuitement — 14 jours</a>
+    <a href="#demo" class="btn-ghost-hero">▷ Voir la démo</a>
+  </div>
+  <div class="hero-proof">
+    <div class="proof-avatars">
+      <div class="proof-avatar">JD</div>
+      <div class="proof-avatar" style="background:linear-gradient(135deg,#47ffb8,#4a90e2)">ML</div>
+      <div class="proof-avatar" style="background:linear-gradient(135deg,#a855f7,#ec4899)">SR</div>
+      <div class="proof-avatar" style="background:linear-gradient(135deg,#ff6b35,#e8ff47)">AB</div>
+    </div>
+    <div class="proof-text">
+      <div class="proof-stars">★★★★★</div>
+      <strong>+1 200 marketeurs</strong> font confiance à PULSE
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item"><span class="marquee-dot"></span>Posts Instagram</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Emails marketing</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Google Ads</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Articles SEO</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>LinkedIn B2B</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Meta Ads</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Scripts YouTube</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Fiches produit</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Posts Instagram</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Emails marketing</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Google Ads</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Articles SEO</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>LinkedIn B2B</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Meta Ads</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Scripts YouTube</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Fiches produit</span>
+  </div>
+</div>
+
+<!-- DEMO -->
+<section class="demo-section" id="demo">
+  <div class="section-tag">Démo live</div>
+  <h2 class="section-title reveal">Voyez l'IA à l'œuvre</h2>
+  <p class="section-sub reveal">Entrez votre produit, choisissez un objectif, obtenez du contenu prêt à publier.</p>
+  <div class="demo-window reveal">
+    <div class="demo-bar">
+      <div class="demo-dot r"></div>
+      <div class="demo-dot y"></div>
+      <div class="demo-dot g"></div>
+      <div class="demo-url">app.pulse-ai.fr/generate</div>
+    </div>
+    <div class="demo-body">
+      <div class="demo-left">
+        <div class="demo-field">
+          <div class="demo-field-label">Produit</div>
+          <div class="demo-field-val" id="demoProduct">Café bio en capsules compostables</div>
+        </div>
+        <div class="demo-field">
+          <div class="demo-field-label">Objectif</div>
+          <div class="demo-field-val">Conversion & vente</div>
+        </div>
+        <div class="demo-field">
+          <div class="demo-field-label">Ton</div>
+          <div class="demo-field-val">Inspirant · Authentique</div>
+        </div>
+        <button class="demo-gen-btn" onclick="runDemo()">✦ Générer le contenu</button>
+      </div>
+      <div class="demo-right">
+        <div class="demo-output-label">✦ Résultat IA</div>
+        <div class="demo-typing" id="demoOutput">
+          Cliquez sur "Générer" pour voir l'IA en action…<span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="features-header">
+    <div class="section-tag reveal">Fonctionnalités</div>
+    <h2 class="section-title reveal">Tout ce dont vous avez besoin</h2>
+    <p class="section-sub reveal">Une plateforme complète pour tous vos besoins en contenu marketing.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-1">✦</div>
+      <div class="feature-title">Génération IA multiformat</div>
+      <div class="feature-desc">Posts sociaux, emails, publicités, articles SEO, fiches produit — tout en un seul clic.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-2">⚡</div>
+      <div class="feature-title">Variations automatiques</div>
+      <div class="feature-desc">Obtenez 4 variantes de chaque contenu pour A/B tester et maximiser vos conversions.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-3">◎</div>
+      <div class="feature-title">SEO intégré</div>
+      <div class="feature-desc">Articles optimisés, meta descriptions, FAQ et plans de contenu pour dominer Google.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-4">🏷</div>
+      <div class="feature-title">Hashtags & mots-clés</div>
+      <div class="feature-desc">Mix intelligent de hashtags populaires et de niche pour maximiser votre portée organique.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-5">◷</div>
+      <div class="feature-title">Historique & bibliothèque</div>
+      <div class="feature-desc">Retrouvez, réutilisez et améliorez tous vos contenus depuis votre bibliothèque personnelle.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-6">◈</div>
+      <div class="feature-title">API & intégrations</div>
+      <div class="feature-desc">Connectez PULSE à Shopify, WordPress, Zapier et tous vos outils marketing préférés.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-tag reveal">Simplicité</div>
+  <h2 class="section-title reveal">Prêt en 3 étapes</h2>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <div class="step-title">Décrivez votre offre</div>
+      <div class="step-desc">Renseignez votre produit, votre audience et votre objectif marketing.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <div class="step-title">L'IA génère</div>
+      <div class="step-desc">PULSE crée du contenu optimisé en moins de 5 secondes, avec variations.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <div class="step-title">Publiez & performez</div>
+      <div class="step-desc">Copiez, adaptez et publiez. Économisez des heures chaque semaine.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="proof-section">
+  <div class="section-tag reveal">Témoignages</div>
+  <h2 class="section-title reveal">Ce que disent nos clients</h2>
+  <div class="testimonials">
+    <div class="testimonial reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"PULSE a transformé ma façon de gérer le marketing de ma boutique. Ce qui me prenait 3h par semaine prend maintenant 15 minutes. Incroyable."</p>
+      <div class="testi-user">
+        <div class="testi-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">JD</div>
+        <div><div class="testi-name">Julie D.</div><div class="testi-role">E-commerçante, Lyon</div></div>
+      </div>
+    </div>
+    <div class="testimonial reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"Le ROI est évident dès le premier mois. Mes emails générés par PULSE ont un taux d'ouverture 40% supérieur à mes anciens textes."</p>
+      <div class="testi-user">
+        <div class="testi-avatar" style="background:linear-gradient(135deg,#47ffb8,#4a90e2)">ML</div>
+        <div><div class="testi-name">Marc L.</div><div class="testi-role">Fondateur SaaS B2B, Paris</div></div>
+      </div>
+    </div>
+    <div class="testimonial reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"J'ai testé 6 outils IA différents. PULSE est de loin le plus complet et le mieux adapté au marché francophone. Je le recommande à tous mes clients."</p>
+      <div class="testi-user">
+        <div class="testi-avatar" style="background:linear-gradient(135deg,#a855f7,#ec4899)">SR</div>
+        <div><div class="testi-name">Sarah R.</div><div class="testi-role">Consultante marketing</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="section-tag reveal">Tarifs</div>
+  <h2 class="section-title reveal">Simple et transparent</h2>
+  <p class="section-sub reveal">Commencez gratuitement. Évoluez quand vous le souhaitez.</p>
+  <div class="pricing-toggle">
+    <button class="toggle-btn active" onclick="setMonthly()">Mensuel</button>
+    <button class="toggle-btn" onclick="setAnnual()">Annuel <span class="save-badge">−30%</span></button>
+  </div>
+  <div class="pricing-cards">
+    <div class="pricing-card reveal">
+      <div class="pc-name">Starter</div>
+      <div class="pc-price" id="price1">29€</div>
+      <div class="pc-period">/mois · Sans engagement</div>
+      <div class="pc-desc">Parfait pour débuter et tester PULSE sur votre activité.</div>
+      <ul class="pc-features">
+        <li>100 crédits / mois</li>
+        <li>Posts réseaux sociaux</li>
+        <li>Emails marketing</li>
+        <li>Hashtags automatiques</li>
+        <li class="no">Campagnes automatiques</li>
+        <li class="no">API access</li>
+        <li class="no">Multi-utilisateurs</li>
+      </ul>
+      <a href="auth.html?plan=starter" class="pc-btn pc-btn-default">Commencer Starter</a>
+    </div>
+    <div class="pricing-card featured reveal">
+      <div class="pc-name">Pro</div>
+      <div class="pc-price" id="price2">79€</div>
+      <div class="pc-period">/mois · Le plus populaire</div>
+      <div class="pc-desc">Pour les entrepreneurs et PME qui veulent scaler leur marketing.</div>
+      <ul class="pc-features">
+        <li>300 crédits / mois</li>
+        <li>Tous les types de contenu</li>
+        <li>Variations automatiques (×4)</li>
+        <li>SEO & Blog illimité</li>
+        <li>Historique illimité</li>
+        <li class="no">API access</li>
+        <li class="no">Multi-utilisateurs</li>
+      </ul>
+      <a href="auth.html?plan=pro" class="pc-btn pc-btn-featured">Commencer Pro →</a>
+    </div>
+    <div class="pricing-card reveal">
+      <div class="pc-name">Business</div>
+      <div class="pc-price" id="price3">199€</div>
+      <div class="pc-period">/mois · Pour les équipes</div>
+      <div class="pc-desc">La puissance maximale pour les agences et entreprises.</div>
+      <ul class="pc-features">
+        <li>Crédits illimités</li>
+        <li>Tous les types de contenu</li>
+        <li>Campagnes auto + scheduling</li>
+        <li>API access complète</li>
+        <li>5 utilisateurs inclus</li>
+        <li>Support prioritaire dédié</li>
+        <li>White-label disponible</li>
+      </ul>
+      <a href="auth.html?plan=business" class="pc-btn pc-btn-default">Commencer Business</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="section-tag" style="text-align:center">FAQ</div>
+  <h2 class="section-title" style="text-align:center;margin-bottom:40px">Questions fréquentes</h2>
+  <div class="faq-item open">
+    <div class="faq-q" onclick="toggleFaq(this)">Qu'est-ce qu'un crédit ? <span class="faq-icon">+</span></div>
+    <div class="faq-a">Un crédit correspond à une génération de contenu. Chaque type (post, email, SEO…) consomme entre 1 et 4 crédits selon la longueur. Les crédits se renouvellent chaque mois.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Le contenu généré est-il unique ? <span class="faq-icon">+</span></div>
+    <div class="faq-a">Oui, chaque génération est unique et personnalisée à votre marque. L'IA ne réutilise pas de templates figés mais crée du contenu sur-mesure à chaque fois.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Puis-je annuler à tout moment ? <span class="faq-icon">+</span></div>
+    <div class="faq-a">Absolument. Aucun engagement, aucune pénalité. Vous pouvez annuler depuis votre tableau de bord à tout moment et continuer jusqu'à la fin de votre période payée.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Le contenu est-il adapté au SEO français ? <span class="faq-icon">+</span></div>
+    <div class="faq-a">Oui, PULSE est optimisé pour le marché francophone. L'IA connaît les spécificités SEO françaises, les habitudes des internautes et les algorithmes des plateformes locales.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Y a-t-il une période d'essai ? <span class="faq-icon">+</span></div>
+    <div class="faq-a">Oui ! 14 jours d'essai gratuit, sans carte de crédit. Vous accédez à toutes les fonctionnalités Pro pendant cette période.</div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title reveal">PRÊT À<br><em>SCALER</em><br>VOTRE MARKETING ?</h2>
+  <p class="cta-sub reveal">Rejoignez 1 200+ entrepreneurs qui automatisent leur marketing avec PULSE.</p>
+  <a href="auth.html" class="btn-hero reveal">Commencer gratuitement — 14 jours</a>
+  <p class="cta-guarantee reveal">✓ Sans carte de crédit &nbsp;·&nbsp; <span>✓ Annulable à tout moment</span> &nbsp;·&nbsp; ✓ Support 7j/7</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo">PULSE</div>
+      <p>La plateforme de marketing IA pour entrepreneurs et PME francophones.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produit</h4>
+      <a href="#features">Fonctionnalités</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="app.html">Application</a>
+      <a href="#">API</a>
+    </div>
+    <div class="footer-col">
+      <h4>Ressources</h4>
+      <a href="#">Documentation</a>
+      <a href="#">Blog</a>
+      <a href="#">Tutoriels</a>
+      <a href="#">Changelog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Légal</h4>
+      <a href="#">Mentions légales</a>
+      <a href="#">CGU</a>
+      <a href="#">Politique RGPD</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 PULSE IA · Tous droits réservés</p>
+    <p>Fait avec ✦ à Paris 🇫🇷</p>
+  </div>
+</footer>
+
+<script>
+// NAV SCROLL
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+// SCROLL REVEAL
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// PRICING TOGGLE
+const prices = {monthly:{1:'29€',2:'79€',3:'199€'},annual:{1:'20€',2:'55€',3:'139€'}};
+function setMonthly(){
+  document.querySelectorAll('.toggle-btn')[0].classList.add('active');
+  document.querySelectorAll('.toggle-btn')[1].classList.remove('active');
+  document.getElementById('price1').textContent=prices.monthly[1];
+  document.getElementById('price2').textContent=prices.monthly[2];
+  document.getElementById('price3').textContent=prices.monthly[3];
+}
+function setAnnual(){
+  document.querySelectorAll('.toggle-btn')[1].classList.add('active');
+  document.querySelectorAll('.toggle-btn')[0].classList.remove('active');
+  document.getElementById('price1').textContent=prices.annual[1];
+  document.getElementById('price2').textContent=prices.annual[2];
+  document.getElementById('price3').textContent=prices.annual[3];
+}
+
+// FAQ
+function toggleFaq(el){
+  const item=el.parentElement;
+  document.querySelectorAll('.faq-item').forEach(i=>{if(i!==item)i.classList.remove('open');});
+  item.classList.toggle('open');
+}
+
+// DEMO TYPING
+const demoTexts=[
+  `☕ Votre café du matin vient d'évoluer.\n\nFini les capsules en plastique qui encombrent notre planète. Notre café bio en capsules 100% compostables vous offre une expérience premium — sans compromis pour la Terre.\n\n✓ Arabica single-origin\n✓ Certifié bio & équitable\n✓ Capsule compostable en 12 semaines\n\nParce que le bon café n'a pas à coûter cher à la planète. 🌍\n\n#CaféBio #ZéroDechet #CapsuleCompostable #CaféDurable #ConsommerAutrement`,
+  `🚀 Et si votre routine café changeait le monde ?\n\nChaque matin, des millions de capsules plastique finissent à la poubelle. Pas les nôtres.\n\nNos capsules se transforment en compost en 3 mois. Votre café, lui, reste exceptionnel.\n\n👉 Essayez-les 30 jours, satisfait ou remboursé.\n\n#CaféConscient #BioEtBon #DeveloppementDurable`,
+];
+let demoIdx=0;
+function runDemo(){
+  const out=document.getElementById('demoOutput');
+  const text=demoTexts[demoIdx%demoTexts.length];
+  demoIdx++;
+  out.innerHTML='<span class="cursor"></span>';
+  let i=0;
+  const interval=setInterval(()=>{
+    if(i<text.length){
+      out.innerHTML=text.substring(0,i+1).replace(/\n/g,'<br>')+'<span class="cursor"></span>';
+      i++;
+    } else {
+      clearInterval(interval);
+    }
+  },12);
+}
+</script>
+</body>
+</html>

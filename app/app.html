@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{
+  --bg:#06060a;--surface:#0e0e14;--surface2:#16161e;
+  --border:#1e1e2a;--accent:#e8ff47;--accent2:#ff6b35;--accent3:#47ffb8;
+  --text:#f0f0f5;--muted:#7070a0;--error:#ff4747;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:10;
+}
+.logo-area{
+  padding:22px 20px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:34px;height:34px;background:var(--accent);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;color:#06060a;font-size:18px;letter-spacing:1px;flex-shrink:0;
+}
+.logo-txt{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--accent);}
+
+.trial-bar{
+  margin:14px;background:linear-gradient(135deg,rgba(232,255,71,0.06),rgba(255,107,53,0.04));
+  border:1px solid rgba(232,255,71,0.15);border-radius:10px;padding:10px 12px;
+}
+.trial-title{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1px;}
+.trial-days{font-size:12px;color:var(--muted);margin-top:2px;}
+.trial-progress{height:3px;background:var(--border);border-radius:3px;margin-top:8px;}
+.trial-fill{height:100%;width:70%;background:var(--accent);border-radius:3px;}
+
+nav{flex:1;padding:10px 10px;overflow-y:auto;}
+.nav-section{margin-bottom:18px;}
+.nav-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:0 10px 8px;font-weight:600;}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;
+  cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;
+  transition:all 0.15s;position:relative;margin-bottom:2px;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(232,255,71,0.07);color:var(--accent);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;}
+
+.credits-display{
+  margin:0 14px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px;
+}
+.credits-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.credits-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.5px;}
+.credits-count{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.credits-bar{height:4px;background:var(--border);border-radius:4px;}
+.credits-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent3),var(--accent));transition:width 0.3s;}
+.upgrade-link{font-size:11px;color:var(--accent);margin-top:6px;cursor:pointer;display:block;text-align:right;}
+
+.user-footer{padding:14px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer;}
+.user-card:hover{background:var(--surface2);}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#06060a;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:600;}
+.user-plan{font-size:11px;color:var(--accent);font-weight:600;}
+.logout-btn{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;}
+.logout-btn:hover{color:var(--error);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+.topbar{
+  padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.topbar-left h1{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;}
+.topbar-left p{font-size:12px;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.btn-primary{background:var(--accent);color:#06060a;font-weight:800;}
+.btn-primary:hover{background:#d4eb3a;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+.content{flex:1;overflow-y:auto;padding:22px 24px;}
+
+/* ── VIEWS ── */
+.view{display:none;}
+.view.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── GENERATOR ── */
+.gen-tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;width:fit-content;margin-bottom:20px;}
+.gen-tab{padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.gen-tab:hover{color:var(--text);}
+.gen-tab.active{background:var(--surface2);color:var(--text);}
+
+.gen-layout{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-header{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:16px;}
+
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);
+  font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:70px;line-height:1.5;}
+.form-select{appearance:none;cursor:pointer;}
+.char-count{font-size:10px;color:var(--muted);text-align:right;margin-top:3px;font-family:'DM Mono',monospace;}
+
+.tone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.tone-chip{
+  padding:6px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface2);font-size:12px;color:var(--muted);cursor:pointer;
+  text-align:center;transition:all 0.15s;font-family:'DM Sans',sans-serif;
+}
+.tone-chip:hover{border-color:var(--accent);color:var(--text);}
+.tone-chip.sel{border-color:var(--accent);background:rgba(232,255,71,0.06);color:var(--accent);font-weight:700;}
+
+.platform-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.plat-chip{
+  padding:7px 4px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface2);text-align:center;cursor:pointer;transition:all 0.15s;
+  font-size:10px;color:var(--muted);font-family:'DM Sans',sans-serif;
+}
+.plat-chip:hover{border-color:var(--text);color:var(--text);}
+.plat-chip.sel{border-color:var(--accent);color:var(--accent);background:rgba(232,255,71,0.05);}
+.plat-icon{font-size:16px;display:block;margin-bottom:3px;}
+
+/* OUTPUT */
+.output-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.output-top{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.output-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.output-actions{display:flex;gap:6px;}
+.output-body{padding:20px;min-height:200px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text);}
+.output-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:10px;color:var(--muted);}
+.output-empty .icon{font-size:36px;opacity:0.2;}
+
+.vars-section{margin-top:14px;}
+.vars-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.vars-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.vars-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.var-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;
+  cursor:pointer;transition:all 0.15s;position:relative;
+}
+.var-card:hover{border-color:var(--accent);}
+.var-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:5px;}
+.var-text{font-size:12px;color:var(--text);line-height:1.5;}
+.var-copy-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;opacity:0;transition:opacity 0.15s;}
+.var-card:hover .var-copy-btn{opacity:1;}
+
+.tags-card{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.tags-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px;}
+.tags-content{font-size:12px;font-family:'DM Mono',monospace;color:var(--accent);line-height:2;word-break:break-word;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;gap:10px;padding:20px;color:var(--muted);font-size:13px;}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pulse-text{animation:textPulse 1.5s ease-in-out infinite;}
+@keyframes textPulse{0%,100%{opacity:1;}50%{opacity:0.3;};}
+
+/* METRICS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.metric-val{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1;}
+.metric-val.a1{color:var(--accent);}
+.metric-val.a2{color:var(--accent2);}
+.metric-val.a3{color:var(--accent3);}
+.metric-lbl{font-size:11px;color:var(--muted);margin-top:3px;}
+.metric-trend{font-size:11px;margin-top:5px;}
+.trend-up{color:var(--accent3);}
+
+/* HISTORY TABLE */
+.history-table{width:100%;border-collapse:collapse;}
+.history-table th{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:9px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;}
+.history-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);}
+.history-table tr:hover td{background:var(--surface2);}
+.history-table tr:last-child td{border-bottom:none;}
+.type-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.5px;}
+.tp-social{border:1px solid #4a90e2;color:#4a90e2;}
+.tp-email{border:1px solid var(--accent2);color:var(--accent2);}
+.tp-ads{border:1px solid #a855f7;color:#a855f7;}
+.tp-blog{border:1px solid var(--accent);color:var(--accent);}
+.tp-seo{border:1px solid var(--accent3);color:var(--accent3);}
+.status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;}
+.dot-done{background:var(--accent3);}
+.dot-draft{background:var(--muted);}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:900px;}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;position:relative;overflow:hidden;}
+.pc.feat{border-color:var(--accent);background:linear-gradient(160deg,rgba(232,255,71,0.03),var(--surface));}
+.pc.feat::after{content:'⭐ POPULAIRE';position:absolute;top:15px;right:-26px;background:var(--accent);color:#06060a;font-size:8px;font-weight:900;letter-spacing:1px;padding:4px 40px;transform:rotate(35deg);}
+.pc-name{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:12px;}
+.pc-price{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:-1px;line-height:1;}
+.pc-period{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.pc-feats{list-style:none;margin-bottom:22px;border-top:1px solid var(--border);padding-top:16px;}
+.pc-feats li{font-size:13px;padding:5px 0;color:var(--muted);display:flex;gap:7px;border-bottom:1px solid rgba(255,255,255,0.03);}
+.pc-feats li:last-child{border-bottom:none;}
+.pc-feats li::before{content:'✓';color:var(--accent3);font-weight:700;flex-shrink:0;}
+.pc-feats li.no{color:#444;}
+.pc-feats li.no::before{content:'—';color:#333;}
+.pc-btn{width:100%;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.pc-btn-def{background:var(--surface);border:1px solid var(--border);color:var(--muted);}
+.pc-btn-def:hover{border-color:var(--text);color:var(--text);}
+.pc-btn-feat{background:var(--accent);color:#06060a;}
+.pc-btn-feat:hover{background:#d4eb3a;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;transform:translateY(20px);opacity:0;transition:all 0.3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--accent3);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* BILLING MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:460px;max-width:90vw;position:relative;transform:scale(0.95);transition:transform 0.2s;}
+.modal-overlay.show .modal{transform:scale(1);}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.modal-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;}
+.stripe-card-el{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px;}
+
+@media(max-width:900px){
+  .gen-layout{grid-template-columns:1fr;}
+  .metrics-row{grid-template-columns:1fr 1fr;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .vars-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-mark">P</div>
+    <span class="logo-txt">PULSE</span>
+  </div>
+
+  <div class="trial-bar">
+    <div class="trial-title">✦ ESSAI GRATUIT</div>
+    <div class="trial-days" id="trialDays">10 jours restants</div>
+    <div class="trial-progress"><div class="trial-fill" id="trialFill"></div></div>
+  </div>
+
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Générer</div>
+      <div class="nav-item active" onclick="go('generate')"><span class="nav-icon">✦</span>Contenu IA</div>
+      <div class="nav-item" onclick="go('seo')"><span class="nav-icon">◎</span>SEO & Blog</div>
+      <div class="nav-item" onclick="go('campaigns')"><span class="nav-icon">⚡</span>Campagnes<span class="nav-badge">BETA</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item" onclick="go('dashboard')"><span class="nav-icon">▦</span>Dashboard</div>
+      <div class="nav-item" onclick="go('history')"><span class="nav-icon">◷</span>Historique</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Compte</div>
+      <div class="nav-item" onclick="go('billing')"><span class="nav-icon">◈</span>Abonnement</div>
+      <div class="nav-item" onclick="go('settings')"><span class="nav-icon">⚙</span>Paramètres</div>
+    </div>
+  </nav>
+
+  <div class="credits-display">
+    <div class="credits-top">
+      <span class="credits-label">Crédits</span>
+      <span class="credits-count" id="creditsCount">240 / 300</span>
+    </div>
+    <div class="credits-bar"><div class="credits-fill" id="creditsFill" style="width:80%"></div></div>
+    <span class="upgrade-link" onclick="go('billing')">+ Obtenir plus de crédits →</span>
+  </div>
+
+  <div class="user-footer">
+    <div class="user-card">
+      <div class="avatar" id="userAvatar">U</div>
+      <div>
+        <div class="user-name" id="userName">Mon compte</div>
+        <div class="user-plan">Plan Pro ✦</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Déconnexion">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="pageTitle">CONTENU IA</h1>
+      <p id="pageSub">Générez du contenu marketing en quelques secondes</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="exportContent()" id="exportBtn">⬆ Exporter</button>
+      <button class="btn btn-primary" id="genBtn" onclick="generate()">✦ Générer</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── GENERATE ── -->
+    <div class="view active" id="view-generate">
+      <div class="gen-tabs">
+        <button class="gen-tab active" onclick="switchType(this,'social')">📱 Social</button>
+        <button class="gen-tab" onclick="switchType(this,'email')">✉ Email</button>
+        <button class="gen-tab" onclick="switchType(this,'ads')">🎯 Ads</button>
+        <button class="gen-tab" onclick="switchType(this,'blog')">✍ Blog</button>
+      </div>
+
+      <div class="gen-layout">
+        <!-- CONFIG -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="card-header">📋 Produit & marque</div>
+            <div class="form-group">
+              <label class="form-label">Nom de marque</label>
+              <input class="form-input" id="fBrand" type="text" placeholder="ex: NovaSkin, Café Nomade…">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description du produit/service</label>
+              <textarea class="form-textarea" id="fDesc" oninput="document.getElementById('charCount').textContent=this.value.length+'/280'" placeholder="ex: Crème visage bio anti-âge pour femmes actives 30-50 ans…"></textarea>
+              <div class="char-count"><span id="charCount">0</span>/280</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objectif</label>
+              <select class="form-select" id="fObj">
+                <option value="">Choisir un objectif</option>
+                <option value="awareness">Notoriété de marque</option>
+                <option value="engagement">Engagement & communauté</option>
+                <option value="conversion">Vente & conversion</option>
+                <option value="retention">Fidélisation client</option>
+                <option value="launch">Lancement produit</option>
+                <option value="promo">Promotion / Soldes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Audience cible</label>
+              <input class="form-input" id="fAudience" type="text" placeholder="ex: Femmes 25-40 ans, urbaines, CSP+">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">🎨 Ton & style</div>
+            <div class="tone-grid">
+              <div class="tone-chip" onclick="pickTone(this,'professionnel')">Professionnel</div>
+              <div class="tone-chip sel" onclick="pickTone(this,'inspirant')">Inspirant ✓</div>
+              <div class="tone-chip" onclick="pickTone(this,'humoristique')">Humoristique</div>
+              <div class="tone-chip" onclick="pickTone(this,'urgence')">Urgence</div>
+              <div class="tone-chip" onclick="pickTone(this,'luxe')">Luxe</div>
+              <div class="tone-chip" onclick="pickTone(this,'authentique')">Authentique</div>
+            </div>
+          </div>
+
+          <div class="card" id="platformCard">
+            <div class="card-header">📡 Plateformes</div>
+            <div class="platform-row">
+              <div class="plat-chip sel" onclick="this.classList.toggle('sel')"><span class="plat-icon">📸</span>Instagram</div>
+              <div class="plat-chip" onclick="this.classList.toggle('sel')"><span class="plat-icon">𝕏</span>Twitter</div>
+              <div class="plat-chip" onclick="this.classList.toggle('sel')"><span class="plat-icon">💼</span>LinkedIn</div>
+              <div class="plat-chip" onclick="this.classList.toggle('sel')"><span class="plat-icon">📘</span>Facebook</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OUTPUT PANEL -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="output-card">
+            <div class="output-top">
+              <span class="output-label">✦ Contenu généré</span>
+              <div class="output-actions">
+                <button class="btn btn-ghost" style="padding:5px 11px;font-size:12px" id="copyBtn" onclick="copyOutput()" disabled>Copier</button>
+                <button class="btn btn-ghost" style="padding:5px 11px;font-size:12px" id="saveBtn" onclick="saveHistory()" disabled>Sauvegarder</button>
+              </div>
+            </div>
+            <div class="output-body" id="outputBody">
+              <div class="output-empty">
+                <span class="icon">✦</span>
+                <span>Configurez votre contenu puis cliquez <strong>Générer</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div id="variationsWrap" style="display:none;">
+            <div class="vars-header">
+              <span class="vars-title">◈ Variations</span>
+              <button class="btn btn-ghost" style="padding:5px 11px;font-size:11px" onclick="regenVariations()">↻ Régénérer</button>
+            </div>
+            <div class="vars-grid" id="variationsGrid"></div>
+          </div>
+
+          <div class="tags-card" id="tagsCard" style="display:none">
+            <div class="tags-label">🏷 Hashtags suggérés</div>
+            <div class="tags-content" id="tagsContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEO ── -->
+    <div class="view" id="view-seo">
+      <div style="max-width:660px;display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-header">◎ Générateur SEO & Blog</div>
+          <div class="form-group">
+            <label class="form-label">Mot-clé principal</label>
+            <input class="form-input" id="seoKw" type="text" placeholder="ex: crème visage naturelle anti-âge">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type de contenu</label>
+            <select class="form-select" id="seoType">
+              <option>Article de blog complet (800-1200 mots)</option>
+              <option>Meta title + description optimisée</option>
+              <option>Plan d'article SEO détaillé</option>
+              <option>FAQ SEO — 5 questions / réponses</option>
+              <option>Description produit e-commerce SEO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Secteur / niche</label>
+            <input class="form-input" id="seoNiche" type="text" placeholder="ex: beauté naturelle, SaaS B2B, restauration…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mots-clés secondaires (optionnel)</label>
+            <input class="form-input" id="seoSecondary" type="text" placeholder="ex: anti-rides, soin naturel, bio certifié">
+          </div>
+          <button class="btn btn-primary" onclick="generateSEO()" id="seoBtnGen" style="width:100%">✦ Générer le contenu SEO</button>
+        </div>
+        <div class="output-card" id="seoOutput" style="display:none">
+          <div class="output-top">
+            <span class="output-label">◎ Résultat SEO</span>
+            <div class="output-actions">
+              <button class="btn btn-ghost" style="padding:5px 11px;font-size:12px" onclick="copySEO()">Copier</button>
+            </div>
+          </div>
+          <div class="output-body" id="seoBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CAMPAIGNS ── -->
+    <div class="view" id="view-campaigns">
+      <div style="background:rgba(232,255,71,0.04);border:1px solid rgba(232,255,71,0.15);border-radius:12px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+        <span style="font-size:32px">🚀</span>
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--accent);font-size:14px">Campagnes automatiques — En cours de développement</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px">Planifiez et publiez automatiquement sur tous vos réseaux. Disponible Q2 2026.</div>
+        </div>
+        <button class="btn btn-primary" onclick="go('billing')">Pré-réserver →</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+        <div class="card" style="text-align:center;padding:28px">
+          <div style="font-size:32px;margin-bottom:10px">📅</div>
+          <div style="font-weight:700;margin-bottom:6px">Scheduling IA</div>
+          <div style="font-size:13px;color:var(--muted)">Publiez au moment optimal automatiquement selon votre audience.</div>
+        </div>
+        <div class="card" style="text-align:center;padding:28px">
+          <div style="font-size:32px;margin-bottom:10px">🔄</div>
+          <div style="font-weight:700;margin-bottom:6px">Multi-canal</div>
+          <div style="font-size:13px;color:var(--muted)">Instagram, LinkedIn, Twitter, Facebook en simultané.</div>
+        </div>
+        <div class="card" style="text-align:center;padding:28px">
+          <div style="font-size:32px;margin-bottom:10px">📊</div>
+          <div style="font-weight:700;margin-bottom:6px">A/B Testing</div>
+          <div style="font-size:13px;color:var(--muted)">Testez automatiquement les meilleures variations.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ── -->
+    <div class="view" id="view-dashboard">
+      <div class="metrics-row">
+        <div class="metric">
+          <div class="metric-val a1" id="mTotal">0</div>
+          <div class="metric-lbl">Contenus générés</div>
+          <div class="metric-trend trend-up">↑ +12% ce mois</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val a2">12.4K</div>
+          <div class="metric-lbl">Engagements estimés</div>
+          <div class="metric-trend trend-up">↑ +38% ce mois</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val a3" id="mCredits">240</div>
+          <div class="metric-lbl">Crédits restants</div>
+          <div class="metric-trend">/300 mensuels</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val">96h</div>
+          <div class="metric-lbl">Temps économisé</div>
+          <div class="metric-trend trend-up">↑ productivité ×8</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">📈 Activité — 30 derniers jours</div>
+        <div id="barChart" style="display:flex;align-items:flex-end;gap:4px;height:90px;padding-top:10px;margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">⚡ Générations récentes</div>
+        <div id="recentList" style="font-size:13px;color:var(--muted);text-align:center;padding:20px">Aucune génération récente</div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY ── -->
+    <div class="view" id="view-history">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>◷ Historique des générations</span>
+          <button class="btn btn-ghost" style="padding:5px 11px;font-size:11px" onclick="clearHistory()">Effacer tout</button>
+        </div>
+        <table class="history-table">
+          <thead><tr><th>Date</th><th>Type</th><th>Marque</th><th>Aperçu</th><th>Statut</th><th>Action</th></tr></thead>
+          <tbody id="historyBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Aucun historique — générez votre premier contenu !</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── BILLING ── -->
+    <div class="view" id="view-billing">
+      <div style="background:rgba(71,255,184,0.04);border:1px solid rgba(71,255,184,0.15);border-radius:12px;padding:16px 20px;margin-bottom:22px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:22px">✦</span>
+        <div>
+          <div style="font-weight:700;color:var(--accent3)">Plan Pro actif — Essai gratuit</div>
+          <div style="font-size:13px;color:var(--muted)">10 jours restants · Aucune carte enregistrée</div>
+        </div>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="showPayModal('pro')">Activer mon abonnement →</button>
+      </div>
+      <div class="pricing-grid">
+        <div class="pc">
+          <div class="pc-name">Starter</div>
+          <div class="pc-price">29€</div>
+          <div class="pc-period">/mois</div>
+          <ul class="pc-feats">
+            <li>100 crédits / mois</li>
+            <li>Posts sociaux & emails</li>
+            <li>Hashtags automatiques</li>
+            <li class="no">Variations (×4)</li>
+            <li class="no">API access</li>
+          </ul>
+          <button class="pc-btn pc-btn-def" onclick="showPayModal('starter')">Choisir Starter</button>
+        </div>
+        <div class="pc feat">
+          <div class="pc-name">Pro</div>
+          <div class="pc-price">79€</div>
+          <div class="pc-period">/mois · Offre en cours</div>
+          <ul class="pc-feats">
+            <li>300 crédits / mois</li>
+            <li>Tous les types de contenu</li>
+            <li>Variations automatiques (×4)</li>
+            <li>SEO & Blog illimité</li>
+            <li class="no">API access</li>
+          </ul>
+          <button class="pc-btn pc-btn-feat" onclick="showPayModal('pro')">Activer Pro →</button>
+        </div>
+        <div class="pc">
+          <div class="pc-name">Business</div>
+          <div class="pc-price">199€</div>
+          <div class="pc-period">/mois</div>
+          <ul class="pc-feats">
+            <li>Crédits illimités</li>
+            <li>Tous les types</li>
+            <li>Campagnes auto</li>
+            <li>API access</li>
+            <li>5 utilisateurs</li>
+          </ul>
+          <button class="pc-btn pc-btn-def" onclick="showPayModal('business')">Choisir Business</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="view" id="view-settings">
+      <div class="card" style="max-width:520px;display:flex;flex-direction:column;gap:14px;">
+        <div class="card-header">⚙ Paramètres du compte</div>
+        <div class="form-group">
+          <label class="form-label">Marque par défaut</label>
+          <input class="form-input" id="settingsBrand" type="text" placeholder="Votre marque principale">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secteur d'activité</label>
+          <select class="form-select" id="settingsSector">
+            <option>E-commerce</option><option>Services B2B</option><option>Santé & Beauté</option>
+            <option>Tech / SaaS</option><option>Restauration</option><option>Immobilier</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Langue de génération</label>
+          <select class="form-select"><option>Français 🇫🇷</option><option>English 🇬🇧</option><option>Español 🇪🇸</option></select>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" id="settingsEmail" placeholder="votre@email.fr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nouveau mot de passe</label>
+            <input class="form-input" type="password" placeholder="Laisser vide pour ne pas changer">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Sauvegarder</button>
+        <button class="btn btn-ghost" onclick="logout()" style="margin-top:8px;color:var(--error);border-color:rgba(255,71,71,0.3)">⏻ Se déconnecter</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePayModal()">×</button>
+    <div class="modal-title">ACTIVER L'ABONNEMENT</div>
+    <div class="modal-sub" id="modalPlanDesc">Plan Pro — 79€/mois · Sans engagement</div>
+    <div class="form-group">
+      <label class="form-label">Nom sur la carte</label>
+      <input class="form-input" id="cardName" type="text" placeholder="Jules Martin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Carte bancaire</label>
+      <div class="stripe-card-el" id="card-element">
+        <!-- Stripe Card Element injecté ici -->
+        <div style="color:var(--muted);font-size:13px;font-family:'DM Mono',monospace">
+          💳 Saisissez vos informations de carte
+          <br><span style="font-size:11px;opacity:0.6">Interface Stripe sécurisée (à activer avec votre clé publique)</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:6px;">
+      <span>🔒</span> Paiement 100% sécurisé par Stripe · Données chiffrées SSL
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:13px;" onclick="processPayment()" id="payBtn">
+      Activer mon abonnement →
+    </button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:14px;">Annulable à tout moment depuis votre tableau de bord.</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg">✓ Copié !</span></div>
+
+<script>
+// ────────────────────────────────────────────────
+// CONFIG
+// ────────────────────────────────────────────────
+// 🔧 REMPLACEZ PAR VOS VRAIES CLÉS
+const SUPABASE_URL = 'https://efzffdkgljshqajtlinv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmemZmZGtnbGpzaHFhanRsaW52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDY1OTIsImV4cCI6MjA4OTU4MjU5Mn0.ljQeMLDtdhBdLiC3pW3MRSFOeie3Kks4kiSj3IfXl1o';
+const STRIPE_PK = 'pk_live_51SDLOJExflZ3RciEqICgXBoABhgBcWNXPasi9ukswZEoQ4u7hmCi28pYoSj4srhQoND2DLl8iXM51OhpiSBlVt6P00C7FUtgZd';
+
+let supabase = null;
+let stripe = null;
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  stripe = Stripe(STRIPE_PK);
+} catch(e) { console.warn('Config externe non définie — mode démo'); }
+
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
+let state = {
+  tone: 'inspirant',
+  contentType: 'social',
+  output: '',
+  seoOutput: '',
+  history: JSON.parse(localStorage.getItem('pulse_history') || '[]'),
+  credits: 240,
+  totalGenerated: 0,
+  user: { name: 'Mon compte', email: '', initials: 'U' }
+};
+
+// ────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  renderHistory();
+  renderBarChart();
+  renderRecent();
+  updateMetrics();
+
+  if (supabase && SUPABASE_URL !== 'https://votre-projet.supabase.co') {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const name = user.user_metadata?.first_name || user.email?.split('@')[0] || 'Utilisateur';
+      const initials = name.substring(0,2).toUpperCase();
+      document.getElementById('userName').textContent = name;
+      document.getElementById('userAvatar').textContent = initials;
+      document.getElementById('settingsEmail').value = user.email;
+      state.user = { name, email: user.email, initials };
+    } else {
+      window.location.href = 'auth.html';
+    }
+  }
+});
+
+// ────────────────────────────────────────────────
+// NAVIGATION
+// ────────────────────────────────────────────────
+const pageMeta = {
+  generate: ['CONTENU IA', 'Générez du contenu marketing en quelques secondes', true],
+  seo: ['SEO & BLOG', 'Contenu optimisé pour les moteurs de recherche', false],
+  campaigns: ['CAMPAGNES AUTO', 'Planifiez et publiez en pilote automatique', false],
+  dashboard: ['DASHBOARD', 'Vos performances marketing en temps réel', false],
+  history: ['HISTORIQUE', 'Retrouvez tous vos contenus générés', false],
+  billing: ['ABONNEMENT', 'Gérez votre plan et vos paiements', false],
+  settings: ['PARAMÈTRES', 'Configurez votre compte', false],
+};
+
+function go(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('view-'+view);
+  if (el) el.classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const keys = Object.keys(pageMeta);
+  const idx = keys.indexOf(view);
+  if (navItems[idx]) navItems[idx].classList.add('active');
+  const meta = pageMeta[view];
+  if (meta) {
+    document.getElementById('pageTitle').textContent = meta[0];
+    document.getElementById('pageSub').textContent = meta[1];
+    document.getElementById('genBtn').style.display = meta[2] ? '' : 'none';
+    document.getElementById('exportBtn').style.display = meta[2] ? '' : 'none';
+  }
+  if (view === 'dashboard') { renderBarChart(); renderRecent(); updateMetrics(); }
+}
+
+// ────────────────────────────────────────────────
+// CONTENT TYPE & TONE
+// ────────────────────────────────────────────────
+function switchType(el, type) {
+  document.querySelectorAll('.gen-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  state.contentType = type;
+  document.getElementById('platformCard').style.display = type === 'social' ? '' : 'none';
+}
+
+function pickTone(el, tone) {
+  document.querySelectorAll('.tone-chip').forEach(c => {
+    c.classList.remove('sel');
+    c.textContent = c.textContent.replace(' ✓','');
+  });
+  el.classList.add('sel');
+  el.textContent = el.textContent + ' ✓';
+  state.tone = tone;
+}
+
+// ────────────────────────────────────────────────
+// GENERATE MAIN CONTENT
+// ────────────────────────────────────────────────
+async function generate() {
+  const brand = document.getElementById('fBrand').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  const obj = document.getElementById('fObj').value;
+  const audience = document.getElementById('fAudience').value.trim();
+
+  if (!brand && !desc) { showToast('⚠ Remplissez le nom ou la description', false); return; }
+  if (state.credits <= 0) { showToast('⚠ Crédits insuffisants !', false); go('billing'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true; btn.textContent = '⏳…';
+
+  const body = document.getElementById('outputBody');
+  body.innerHTML = '<div class="loading"><div class="spin"></div><span class="pulse-text">L\'IA génère votre contenu…</span></div>';
+  document.getElementById('variationsWrap').style.display = 'none';
+  document.getElementById('tagsCard').style.display = 'none';
+  document.getElementById('copyBtn').disabled = true;
+  document.getElementById('saveBtn').disabled = true;
+
+  const typeLabels = {
+    social: 'post percutant pour Instagram (avec emojis et appel à l\'action)',
+    email: 'email marketing complet (objet accrocheur, corps persuasif, CTA fort)',
+    ads: 'publicité courte et impactante style Meta Ads (titre 30 cars, description 90 cars, CTA)',
+    blog: 'introduction de blog captivante (200 mots) avec accroche et problématique'
+  };
+  const objLabels = { awareness:'notoriété de marque', engagement:'engagement communauté', conversion:'conversion/vente', retention:'fidélisation', launch:'lancement produit', promo:'promotion/soldes' };
+
+  const prompt = `Tu es un expert copywriter et stratégiste marketing digital.
+
+Génère un ${typeLabels[state.contentType]} pour :
+• Marque : ${brand||'non précisée'}
+• Produit/service : ${desc||'non précisé'}
+• Objectif : ${objLabels[obj]||'non précisé'}
+• Audience : ${audience||'grand public francophone'}
+• Ton : ${state.tone}
+
+Génère UN contenu principal de haute qualité, prêt à publier.
+Commence directement avec le contenu, sans intro ni explication.
+${state.contentType==='social' ? 'Termine avec 5-7 hashtags pertinents sur une nouvelle ligne.' : ''}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Erreur de génération';
+    state.output = text;
+    body.style.whiteSpace = 'pre-wrap';
+    body.textContent = text;
+    document.getElementById('copyBtn').disabled = false;
+    document.getElementById('saveBtn').disabled = false;
+
+    state.credits -= 2;
+    state.totalGenerated++;
+    updateCreditsDisplay();
+
+    if (state.contentType === 'social') {
+      generateHashtags(brand, desc);
+    }
+    generateVariations(brand, desc, obj, audience);
+
+  } catch(e) {
+    body.innerHTML = '<div style="color:var(--error);padding:10px">❌ Erreur — Vérifiez votre connexion internet</div>';
+  }
+  btn.disabled = false; btn.textContent = '✦ Générer';
+}
+
+// ────────────────────────────────────────────────
+// VARIATIONS
+// ────────────────────────────────────────────────
+async function generateVariations(brand, desc, obj, audience) {
+  const wrap = document.getElementById('variationsWrap');
+  const grid = document.getElementById('variationsGrid');
+  wrap.style.display = '';
+  grid.innerHTML = '<div class="loading"><div class="spin"></div><span class="pulse-text">Génération des 4 variations…</span></div>';
+
+  const prompt = `Copywriter expert. Génère 4 micro-variations de posts marketing (max 2 phrases chacune) pour :
+Marque: "${brand}", Produit: "${desc}", Ton: ${state.tone}.
+Réponds UNIQUEMENT en JSON sans markdown: {"v1":"...","v2":"...","v3":"...","v4":"..."}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:500, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    let txt = data.content?.[0]?.text || '{}';
+    txt = txt.replace(/```json|```/g,'').trim();
+    const vars = JSON.parse(txt);
+    const labels = ['Directe','Émotionnelle','Chiffres','Question'];
+    grid.innerHTML = '';
+    Object.entries(vars).forEach(([k,v],i) => {
+      const el = document.createElement('div');
+      el.className = 'var-card';
+      el.innerHTML = `<div class="var-label">Version ${labels[i]||i+1}</div><div class="var-text">${v}</div><button class="var-copy-btn" onclick="copyTxt(event,'${v.replace(/'/g,"\\'").replace(/\n/g,' ')}')">⎘</button>`;
+      grid.appendChild(el);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px">Variations non disponibles</div>';
+  }
+}
+
+function regenVariations() {
+  const brand = document.getElementById('fBrand').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  generateVariations(brand, desc, '', '');
+}
+
+// ────────────────────────────────────────────────
+// HASHTAGS
+// ────────────────────────────────────────────────
+async function generateHashtags(brand, desc) {
+  const card = document.getElementById('tagsCard');
+  const content = document.getElementById('tagsContent');
+  card.style.display = '';
+  content.textContent = '⏳ Génération…';
+
+  const prompt = `Génère 15 hashtags pertinents (mix populaires/niche) pour : "${brand} - ${desc}". Une seule ligne: #tag1 #tag2 etc. Sans explication.`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:150, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    content.textContent = data.content?.[0]?.text || '';
+  } catch(e) {
+    content.textContent = '#marketing #ia #digital #stratégie #contenu';
+  }
+}
+
+// ────────────────────────────────────────────────
+// SEO GENERATE
+// ────────────────────────────────────────────────
+async function generateSEO() {
+  const kw = document.getElementById('seoKw').value.trim();
+  if (!kw) { showToast('⚠ Entrez un mot-clé', false); return; }
+  const type = document.getElementById('seoType').value;
+  const niche = document.getElementById('seoNiche').value.trim();
+  const secondary = document.getElementById('seoSecondary').value.trim();
+
+  const btn = document.getElementById('seoBtnGen');
+  btn.disabled = true; btn.textContent = '⏳ Génération SEO…';
+
+  const out = document.getElementById('seoOutput');
+  const body = document.getElementById('seoBody');
+  out.style.display = '';
+  body.innerHTML = '<div class="loading"><div class="spin"></div><span class="pulse-text">Rédaction SEO en cours…</span></div>';
+
+  const prompt = `Expert SEO et rédacteur web francophone. Génère "${type}" pour :
+Mot-clé principal: "${kw}"
+${secondary ? 'Mots-clés secondaires: '+secondary : ''}
+Secteur: ${niche||'général'}
+
+Réponds directement avec le contenu professionnel, bien structuré, optimisé pour Google.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    state.seoOutput = text;
+    body.style.whiteSpace = 'pre-wrap';
+    body.textContent = text;
+    state.credits -= 3; state.totalGenerated++;
+    updateCreditsDisplay();
+  } catch(e) {
+    body.innerHTML = '<div style="color:var(--error)">❌ Erreur de génération</div>';
+  }
+  btn.disabled = false; btn.textContent = '✦ Générer le contenu SEO';
+}
+
+// ────────────────────────────────────────────────
+// HISTORY
+// ────────────────────────────────────────────────
+function saveHistory() {
+  if (!state.output) return;
+  const brand = document.getElementById('fBrand').value.trim() || 'Sans titre';
+  const item = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('fr-FR'),
+    type: state.contentType,
+    brand,
+    preview: state.output.substring(0,60)+'…',
+    full: state.output
+  };
+  state.history.unshift(item);
+  if (state.history.length > 100) state.history.pop();
+  localStorage.setItem('pulse_history', JSON.stringify(state.history));
+  renderHistory();
+  showToast('✓ Sauvegardé dans l\'historique');
+}
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  if (!state.history.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Aucun historique — générez votre premier contenu !</td></tr>';
+    return;
+  }
+  const typeColor = {social:'tp-social',email:'tp-email',ads:'tp-ads',blog:'tp-blog',seo:'tp-seo'};
+  const typeLabel = {social:'📱 Social',email:'✉ Email',ads:'🎯 Ads',blog:'✍ Blog',seo:'◎ SEO'};
+  body.innerHTML = state.history.map((h,i) => `
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${h.date}</td>
+      <td><span class="type-pill ${typeColor[h.type]||''}">${typeLabel[h.type]||h.type}</span></td>
+      <td style="font-weight:600">${h.brand}</td>
+      <td style="color:var(--muted);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.preview}</td>
+      <td><span class="status-dot dot-done"></span>Généré</td>
+      <td><button class="btn btn-ghost" style="padding:4px 9px;font-size:11px" onclick="loadHistory(${i})">↩ Recharger</button></td>
+    </tr>`).join('');
+}
+
+function loadHistory(idx) {
+  const item = state.history[idx];
+  state.output = item.full;
+  document.getElementById('fBrand').value = item.brand;
+  const body = document.getElementById('outputBody');
+  body.style.whiteSpace = 'pre-wrap';
+  body.textContent = item.full;
+  document.getElementById('copyBtn').disabled = false;
+  document.getElementById('saveBtn').disabled = false;
+  go('generate');
+  showToast('✓ Contenu rechargé');
+}
+
+function clearHistory() {
+  state.history = [];
+  localStorage.removeItem('pulse_history');
+  renderHistory();
+  showToast('✓ Historique effacé');
+}
+
+// ────────────────────────────────────────────────
+// DASHBOARD
+// ────────────────────────────────────────────────
+function renderBarChart() {
+  const chart = document.getElementById('barChart');
+  const data = [4,2,8,6,12,9,16,11,14,18,15,22,19,26,21,28,23,32,27,36,30,28,34,31,38,29,40,35,38,33];
+  const max = Math.max(...data);
+  chart.innerHTML = '';
+  data.forEach((v,i) => {
+    const bar = document.createElement('div');
+    const h = Math.max((v/max)*80, 4);
+    const recent = i >= 24;
+    bar.style.cssText = `flex:1;height:${h}px;border-radius:3px 3px 0 0;background:${recent?'var(--accent)':'var(--border)'};transition:background 0.2s;cursor:pointer;min-width:4px;`;
+    bar.title = `Jour ${i+1}: ${v} générations`;
+    bar.onmouseenter = () => bar.style.background = 'var(--accent)';
+    bar.onmouseleave = () => bar.style.background = recent ? 'var(--accent)' : 'var(--border)';
+    chart.appendChild(bar);
+  });
+}
+
+function renderRecent() {
+  const el = document.getElementById('recentList');
+  if (!state.history.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">Aucune génération récente</div>'; return; }
+  const typeColor = {social:'#4a90e2',email:'var(--accent2)',ads:'#a855f7',blog:'var(--accent)',seo:'var(--accent3)'};
+  el.innerHTML = state.history.slice(0,5).map(h => `
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div style="width:6px;height:6px;border-radius:50%;background:${typeColor[h.type]||'var(--muted)'};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:13px;font-weight:500">${h.brand}</div>
+      <div style="font-size:12px;color:var(--muted)">${h.date}</div>
+    </div>`).join('');
+}
+
+function updateMetrics() {
+  document.getElementById('mTotal').textContent = state.totalGenerated + state.history.length;
+  document.getElementById('mCredits').textContent = state.credits;
+}
+
+// ────────────────────────────────────────────────
+// CREDITS
+// ────────────────────────────────────────────────
+function updateCreditsDisplay() {
+  const max = 300;
+  const pct = (state.credits / max) * 100;
+  document.getElementById('creditsCount').textContent = state.credits + ' / ' + max;
+  document.getElementById('creditsFill').style.width = pct + '%';
+  document.getElementById('creditsFill').style.background = pct < 20 ? 'var(--error)' : pct < 50 ? 'var(--accent2)' : 'linear-gradient(90deg,var(--accent3),var(--accent))';
+  updateMetrics();
+}
+
+// ────────────────────────────────────────────────
+// PAYMENT MODAL (Stripe)
+// ────────────────────────────────────────────────
+let currentPlan = 'pro';
+const planDescs = {
+  starter: 'Plan Starter — 29€/mois · Sans engagement',
+  pro: 'Plan Pro — 79€/mois · Sans engagement',
+  business: 'Plan Business — 199€/mois · Sans engagement'
+};
+
+function showPayModal(plan) {
+  currentPlan = plan;
+  document.getElementById('modalPlanDesc').textContent = planDescs[plan];
+  document.getElementById('payModal').classList.add('show');
+
+  // Mount Stripe Elements if available
+  if (stripe) {
+    const elements = stripe.elements();
+    const cardEl = elements.create('card', {
+      style: {
+        base: { color: '#f0f0f5', fontFamily: '"DM Sans", sans-serif', fontSize: '14px', '::placeholder': { color: '#7070a0' } }
+      }
+    });
+    cardEl.mount('#card-element');
+  }
+}
+
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('show');
+}
+
+async function processPayment() {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true; btn.textContent = '⏳ Traitement du paiement…';
+
+  // 🔧 ICI: Appel à votre API /api/create-subscription qui crée le PaymentIntent Stripe
+  // Exemple d'intégration complète dans api/stripe-webhook.js
+
+  await new Promise(r => setTimeout(r, 2000)); // Simulation
+
+  closePayModal();
+  showToast('✓ Abonnement activé ! Bienvenue dans PULSE ✦');
+  btn.disabled = false; btn.textContent = 'Activer mon abonnement →';
+}
+
+// ────────────────────────────────────────────────
+// SETTINGS
+// ────────────────────────────────────────────────
+function saveSettings() {
+  showToast('✓ Paramètres sauvegardés');
+}
+
+// ────────────────────────────────────────────────
+// AUTH
+// ────────────────────────────────────────────────
+async function logout() {
+  if (supabase && SUPABASE_URL !== 'https://votre-projet.supabase.co') {
+    await supabase.auth.signOut();
+  }
+  window.location.href = 'auth.html';
+}
+
+// ────────────────────────────────────────────────
+// UTILS
+// ────────────────────────────────────────────────
+function copyOutput() {
+  if (!state.output) return;
+  navigator.clipboard.writeText(state.output).then(() => showToast('✓ Contenu copié !'));
+}
+
+function copySEO() {
+  if (!state.seoOutput) return;
+  navigator.clipboard.writeText(state.seoOutput).then(() => showToast('✓ Contenu SEO copié !'));
+}
+
+function copyTxt(e, txt) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(txt).then(() => showToast('✓ Variation copiée !'));
+}
+
+function exportContent() {
+  if (!state.output) { showToast('⚠ Rien à exporter', false); return; }
+  const blob = new Blob([state.output], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'pulse-contenu.txt'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Fichier téléchargé');
+}
+
+function showToast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'toast show' + (ok ? ' ok' : '');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('payModal').addEventListener('click', e => { if(e.target===e.currentTarget) closePayModal(); });
+</script>
+</body>
+</html>
